@@ -1,8 +1,3 @@
----
-runme:
-  id: 01HJAHNAPP6N4X0K2S2NXB67FF
-  version: v2.0
----
 
 # VariableStoreManager
 
@@ -17,7 +12,7 @@ npm install variable-store-manager
 
 Usage of the Library :
 
-```sh {"id":"01HJCEXQTGY0V8C0V9TK50RSAB"}
+```sh 
 const VariableStoreManager = require('variable-store-manager');
 
 // Create an instance of VariableStoreManager
