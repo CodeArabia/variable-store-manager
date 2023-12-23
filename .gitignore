@@ -1,0 +1,14 @@
+# Node.js
+node_modules/
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+
+# Log files
+*.log
+
+# Dependency directory
+.idea/
