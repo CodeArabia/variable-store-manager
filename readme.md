@@ -1,9 +1,3 @@
----
-runme:
-  id: 01HJCJ7G3305SJBHEHGW8DBR3F
-  version: v2.0
----
-
 # VariableStoreManager
 
 ## Installation
@@ -36,7 +30,7 @@ store.saveStoreData();
 
 ```
 
-```sh {"id":"01HJCF03HABES3378QNHAYTW2J"}
+```sh
 new VariableStoreManager(options) //Creates a new instance of the VariableStoreManager.
 
 options (optional) // Configuration options.
