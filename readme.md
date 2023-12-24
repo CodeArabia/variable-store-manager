@@ -1,13 +1,16 @@
+---
+runme:
+  id: 01HJCJ7G3305SJBHEHGW8DBR3F
+  version: v2.0
+---
 
 # VariableStoreManager
-
-A simple module for managing and persisting variables, inspired by Redux, in a JSON-like format.
 
 ## Installation
 
 You can install the VariableStoreManager using npm:
 
-```bash
+```bash {"id":"01HJCJ7G3305SJBHEHGW5KCDYK"}
 npm install variable-store-manager
 
 Usage of the Library :
@@ -52,7 +55,6 @@ delete storeInstance.variableName //Deletes a variable from the store.
 
 
 ```
-
 
 License
 This project is licensed under the MIT License - see the LICENSE file for details.
