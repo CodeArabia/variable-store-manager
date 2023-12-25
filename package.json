@@ -1,6 +1,6 @@
 {
   "name": "variable-store-manager",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A simple module for managing and persisting variables, for global state mangment",
   "main": "index.js",
   "type": "commonjs",
