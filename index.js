@@ -1,42 +1,76 @@
 const fs = require('fs');
 
-/**
- * @typedef {Object} VariableStoreManagerOptions
- * @property {string} [fileName] - The name of the JSON file to load/store data.
- */
-
-/**
- * @typedef {Object} VariableStoreManagerStore
- */
-
 class VariableStoreManager {
-  /**
-   * @param {VariableStoreManagerOptions} [options] - Options for the VariableStoreManager.
-   */
   constructor(options = {}) {
     this.fileName = options.fileName || 'storage.json';
+    if (!fs.existsSync(this.fileName)) {
+      // Create the file with default data
+      fs.writeFileSync(this.fileName, '{}');
+    }
     this.store = this.loadStoreData();
-    this.lastAccessedProperty = null;
+    this.watchers = [];
 
     return new Proxy(this, {
-      get: (target, key) => {
+      get: function (target, key) {
         if (key === 'getVariables') {
           return target.getVariables.bind(target);
         }
-        this.lastAccessedProperty = key;
-        return target.store[key];
+
+        if (key === 'editVariable') {
+          return target.editVariable.bind(target);
+        }
+
+        if (key === 'watchFileChanges') {
+          return target.watchFileChanges.bind(target);
+        }
+
+        if (key === 'saveStoreData') {
+          return target.saveStoreData.bind(target);
+        }
+
+        if (key === 'updateAllWatchers') {
+          return target.updateAllWatchers.bind(target);
+        }
+
+        const value = target.store[key];
+
+        if (typeof value === 'string') {
+          try {
+            target.store[key] = eval(`(${value})`);
+            return target.store[key];
+          } catch (error) {
+            // If there's an error during the conversion, keep the original string
+          }
+        }
+
+        if (typeof value === 'function') {
+          return (...args) => value(...args);
+        }
+
+        return value;
       },
-      set: (target, key, value) => {
+      set: function (target, key, value) {
         console.log(`Assigning value ${value} to key ${key}`);
+
+        if (typeof value === 'function') {
+          value = value.toString();
+        }
+
         target.store[key] = value;
-        target.saveStoreData();
+        target.updateAllWatchers();
         return true;
       },
-      deleteProperty: (target, key) => {
+      deleteProperty: function (target, key) {
         console.log(`Deleting key ${key}`);
         delete target.store[key];
-        target.saveStoreData();
+        target.updateAllWatchers();
         return true;
+      },
+      apply: function(target, thisArg, argumentsList) {
+        if (key === 'saveStoreData') {
+          return target.saveStoreData.bind(target);
+        }
+        return target[key](...argumentsList);
       }
     });
   }
@@ -44,16 +78,32 @@ class VariableStoreManager {
   loadStoreData() {
     try {
       const data = fs.readFileSync(this.fileName, 'utf8');
-      return JSON.parse(data);
+      const parsedData = JSON.parse(data);
+
+      for (const key in parsedData) {
+        if (typeof parsedData[key] === 'string') {
+          try {
+            parsedData[key] = eval(`(${parsedData[key]})`);
+          } catch (error) {
+            // If there's an error during the conversion, keep the original string
+          }
+        }
+      }
+
+      return parsedData;
     } catch (error) {
       return {};
     }
   }
 
   saveStoreData() {
-    const dataToWrite = JSON.stringify(this.store, null, 2);
-    
-    // Check if the data is empty, and delete the file if it is
+    const dataToWrite = JSON.stringify(this.store, (key, value) => {
+      if (typeof value === 'function') {
+        return value.toString();
+      }
+      return value;
+    }, 2);
+
     if (Object.keys(this.store).length === 0) {
       try {
         if (fs.existsSync(this.fileName)) {
@@ -71,11 +121,38 @@ class VariableStoreManager {
     }
   }
 
-  /**
-   * @returns {string[]} - Array of all keys (variables) in the store.
-   */
   getVariables() {
     return Object.keys(this.store);
+  }
+
+  editVariable(oldName, newName) {
+    if (this.store.hasOwnProperty(oldName)) {
+      this.store[newName] = this.store[oldName];
+      delete this.store[oldName];
+      this.updateAllWatchers();
+      console.log(`Variable '${oldName}' renamed to '${newName}'.`);
+    } else {
+      console.log(`Variable '${oldName}' not found.`);
+    }
+  }
+
+  watchFileChanges() {
+    const watcher = fs.watch(this.fileName, (event) => {
+      console.log(`File ${this.fileName} changed. Reloading data...`);
+      this.store = this.loadStoreData();
+      this.updateAllWatchers();
+    });
+
+    this.watchers.push(watcher);
+    console.log(`Watching changes in file: ${this.fileName}`);
+  }
+
+  updateAllWatchers() {
+    for (const watcher of this.watchers) {
+      watcher.close();
+    }
+    this.watchers = [];
+    this.watchFileChanges();
   }
 }
 

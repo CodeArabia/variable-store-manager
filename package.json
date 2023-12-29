@@ -18,6 +18,9 @@
   "author": "codearabia",
   "license": "MIT",
   "dependencies": {
-    "fs": "^0.0.1-security"
+    "chokidar": "^3.5.3",
+    "fs": "^0.0.1-security",
+    "path": "^0.12.7",
+    "util": "^0.12.5"
   }
 }
