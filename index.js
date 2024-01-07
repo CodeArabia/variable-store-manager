@@ -4,7 +4,6 @@ class VariableStoreManager {
   constructor(options = {}) {
     this.fileName = options.fileName || 'storage.json';
     if (!fs.existsSync(this.fileName)) {
-      // Create the file with default data
       fs.writeFileSync(this.fileName, '{}');
     }
     this.store = this.loadStoreData();
@@ -30,6 +29,22 @@ class VariableStoreManager {
 
         if (key === 'updateAllWatchers') {
           return target.updateAllWatchers.bind(target);
+        }
+
+        if (key === 'getData') {
+          return target.getData.bind(target);
+        }
+
+        if (key === 'addData') {
+          return target.addData.bind(target);
+        }
+
+        if (key === 'editData') {
+          return target.editData.bind(target);
+        }
+
+        if (key === 'deleteData') {
+          return target.deleteData.bind(target);
         }
 
         const value = target.store[key];
@@ -122,7 +137,13 @@ class VariableStoreManager {
   }
 
   getVariables() {
-    return Object.keys(this.store);
+    const variables = {};
+
+    for (const key in this.store) {
+      variables[key] = this.store[key];
+    }
+
+    return variables;
   }
 
   editVariable(oldName, newName) {
@@ -153,6 +174,52 @@ class VariableStoreManager {
     }
     this.watchers = [];
     this.watchFileChanges();
+  }
+
+  // Function to handle GET requests
+  getData(path) {
+    const data = this.resolvePath(path);
+    if (data) {
+      return data;
+    } else {
+      throw new Error('Path not found');
+    }
+  }
+
+  // Function to handle POST requests
+  addData(path, newData) {
+    this.store[path] = newData;
+    this.updateAllWatchers();
+  }
+
+  // Function to handle EDIT requests
+  editData(path, newData) {
+    this.store[path] = newData;
+    this.updateAllWatchers();
+  }
+
+  // Function to handle DELETE requests
+  deleteData(path) {
+    if (this.store.hasOwnProperty(path)) {
+      delete this.store[path];
+      this.updateAllWatchers();
+    } else {
+      throw new Error('Path not found');
+    }
+  }
+
+  // Helper function to resolve paths in the store
+  resolvePath(path) {
+    const parts = path.split('/');
+    let data = this.store;
+    for (const part of parts) {
+      if (data.hasOwnProperty(part)) {
+        data = data[part];
+      } else {
+        return null;
+      }
+    }
+    return data;
   }
 }
 
