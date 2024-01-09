@@ -188,13 +188,25 @@ class VariableStoreManager {
 
   // Function to handle POST requests
   addData(path, newData) {
-    this.store[path] = newData;
+    if (path === '') {
+      // If path is empty, directly add to the root of the store
+      Object.assign(this.store, newData);
+    } else {
+      // Otherwise, add to the specified path
+      this.store[path] = newData;
+    }
     this.updateAllWatchers();
   }
 
   // Function to handle EDIT requests
   editData(path, newData) {
-    this.store[path] = newData;
+    if (path === '') {
+      // If path is empty, directly update the root of the store
+      Object.assign(this.store, newData);
+    } else {
+      // Otherwise, update the specified path
+      this.store[path] = newData;
+    }
     this.updateAllWatchers();
   }
 
